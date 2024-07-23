@@ -1,17 +1,21 @@
-FROM node:18.16.1
+# Etapa de construcción
+FROM maven:3.9.3-eclipse-temurin-17 AS build
 
-WORKDIR /app
+# Copiar el pom.xml y los fuentes
+COPY pom.xml .
+COPY src ./src/
 
-COPY . .
+# Construir la aplicación
+RUN mvn -X -f pom.xml clean package -DskipTests
 
-RUN npm install -g npm@9.5.1
-RUN npm install -g @angular/cli@17.0.9
-RUN npm install
+# Etapa de ejecución
+FROM openjdk:17-jdk-slim
 
-RUN ng build --configuration production
+# Copiar el JAR de la etapa de construcción
+COPY --from=build target/globitokuki-backend-0.0.1-SNAPSHOT.jar /app/globitokuki-backend-0.0.1-SNAPSHOT.jar
 
-FROM nginx:latest
+# Exponer el puerto
+EXPOSE 8080
 
-COPY --from=0 /app/dist/globitokuki /usr/share/nginx/html
-
-COPY --from=0 /app/default.conf /etc/nginx/conf.d/default.conf
+# Comando para ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "/app/globitokuki-backend-0.0.1-SNAPSHOT.jar"]
