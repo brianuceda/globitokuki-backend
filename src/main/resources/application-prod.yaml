@@ -2,5 +2,7 @@ APP_PRODUCTION: true
 FRONTEND_URL1: https://globitokuki.vercel.app
 FRONTEND_URL2: https://globitokuki.site
 
+GLOBITOKUKI_PIN: ${GLOBITOKUKI_PIN}
+
 server:
   port: 8080
