@@ -5,7 +5,9 @@ target/
 !**/src/test/**/target/
 
 # My
-src/environments/environment.ts
+.env
+src/main/resources/logback.xml
+src/main/resources/application.yaml
 
 ### STS ###
 .apt_generated
