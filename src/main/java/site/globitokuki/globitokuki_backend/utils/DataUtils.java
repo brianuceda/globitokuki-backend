@@ -7,8 +7,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
-import site.globitokuki.exceptions.SecurityExceptions.ProtectedResource;
-import site.globitokuki.exceptions.SecurityExceptions.SQLInjectionException;
+import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.ProtectedResource;
+import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.SQLInjectionException;
 
 public class DataUtils {
   @Value("${APP_PRODUCTION}")

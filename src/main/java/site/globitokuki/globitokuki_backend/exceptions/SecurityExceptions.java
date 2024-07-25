@@ -1,4 +1,4 @@
-package site.globitokuki.exceptions;
+package site.globitokuki.globitokuki_backend.exceptions;
 
 public class SecurityExceptions {
   public static class ProtectedResource extends RuntimeException {

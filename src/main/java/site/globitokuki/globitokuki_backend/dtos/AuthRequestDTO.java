@@ -1,4 +1,4 @@
-package site.globitokuki.globitokuki_backend.dto;
+package site.globitokuki.globitokuki_backend.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthRequestDTO {
-    private String pin;
+    private String username;
+    private String password;
 }
