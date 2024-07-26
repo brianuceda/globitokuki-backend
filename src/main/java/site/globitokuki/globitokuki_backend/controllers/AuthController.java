@@ -10,9 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import site.globitokuki.globitokuki_backend.dtos.AuthRequestDTO;
-import site.globitokuki.globitokuki_backend.dtos.AuthResponseDTO;
-import site.globitokuki.globitokuki_backend.dtos.ResponseDTO;
+import site.globitokuki.globitokuki_backend.dtos.*;
 import site.globitokuki.globitokuki_backend.services.AuthService;
 import site.globitokuki.globitokuki_backend.utils.DataUtils;
 
@@ -23,9 +21,6 @@ public class AuthController {
   private String frontendUrl1;
   @Value("${FRONTEND_URL2}")
   private String frontendUrl2;
-
-  @Value("${GLOBITOKUKI_PIN}")
-  private String correctPin;
 
   private AuthService authService;
   // private List<String> allowedOrigins;
@@ -50,16 +45,16 @@ public class AuthController {
     return new ResponseEntity<>(response, status);
   }
 
-  @PostMapping("/register")
-  public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
-    this.validationsAuth(request, requestBody);
+  // @PostMapping("/register")
+  // public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
+  //   this.validationsAuth(request, requestBody);
 
-    ResponseDTO response = this.authService.register(requestBody);
-    HttpStatus status = HttpStatus.valueOf(response.getCode());
+  //   ResponseDTO response = this.authService.register(requestBody);
+  //   HttpStatus status = HttpStatus.valueOf(response.getCode());
     
-    response.setCode(null);
-    return new ResponseEntity<>(response, status);
-  }
+  //   response.setCode(null);
+  //   return new ResponseEntity<>(response, status);
+  // }
 
   // Verify if the token is valid and exists in the database
   @PostMapping("/verify")

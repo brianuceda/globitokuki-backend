@@ -12,4 +12,10 @@ public class PlaylistExceptions {
       super(message);
     }
   }
+
+  public static class RepeatedChapters extends RuntimeException {
+    public RepeatedChapters(String message) {
+      super(message);
+    }
+  }
 }

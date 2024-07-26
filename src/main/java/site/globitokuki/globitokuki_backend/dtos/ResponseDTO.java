@@ -12,9 +12,19 @@ public class ResponseDTO {
   private Boolean isTokenValid;
   private Integer code;
 
+  public ResponseDTO(String message) {
+    this.message = message;
+  }
+
   public ResponseDTO(String message, Integer code) {
     this.message = message;
     this.code = code;
+  }
+
+  public ResponseDTO(String message, Integer code, Boolean isTokenValid) {
+    this.message = message;
+    this.code = code;
+    this.isTokenValid = isTokenValid;
   }
 
   public ResponseDTO(Boolean isTokenValid, Integer code) {

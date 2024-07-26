@@ -9,6 +9,7 @@ import site.globitokuki.globitokuki_backend.dtos.ResponseDTO;
 import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
 import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
 import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.RepeatedChapters;
 import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.ProtectedResource;
 import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.SQLInjectionException;
 
@@ -43,6 +44,12 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(PlaylistAlreadyExists.class)
   public ResponseEntity<?> handlePlaylistAlreadyExists(PlaylistAlreadyExists ex) {
+    ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
+    return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
+  }
+  
+  @ExceptionHandler(RepeatedChapters.class)
+  public ResponseEntity<?> handleRepeatedChapters(RepeatedChapters ex) {
     ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
     return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
   }

@@ -13,8 +13,8 @@ public class AuthResponseDTO extends ResponseDTO {
   private String token;
   
   @Builder
-  public AuthResponseDTO(String message, Integer code, String token) {
-    super(message, code);
+  public AuthResponseDTO(String message, Integer code, Boolean isTokenValid, String token) {
+    super(message, code, isTokenValid);
     this.token = token;
   }
 }

@@ -9,11 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.AuthenticationException;
 
-import site.globitokuki.globitokuki_backend.dtos.AuthRequestDTO;
-import site.globitokuki.globitokuki_backend.dtos.AuthResponseDTO;
-import site.globitokuki.globitokuki_backend.dtos.ResponseDTO;
-import site.globitokuki.globitokuki_backend.entity.RoleEnum;
-import site.globitokuki.globitokuki_backend.entity.UserEntity;
+import site.globitokuki.globitokuki_backend.dtos.*;
+import site.globitokuki.globitokuki_backend.entity.*;
 import site.globitokuki.globitokuki_backend.repositories.UserRepository;
 import site.globitokuki.globitokuki_backend.services.AuthService;
 import site.globitokuki.globitokuki_backend.utils.JwtUtils;
@@ -43,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
           .authenticate(new UsernamePasswordAuthenticationToken(requestBody.getUsername(), requestBody.getPassword()));
       UserDetails userDetails = userRepository.findByUsername(requestBody.getUsername()).get();
       String token = jwtUtils.genToken(userDetails);
-      return new AuthResponseDTO("Sesión iniciada correctamente.", 200, token);
+      return new AuthResponseDTO("Sesión iniciada correctamente.", 200, true, token);
     } catch (AuthenticationException ex) {
       return new ResponseDTO("Credenciales incorrectos.", 401);
     }
@@ -58,13 +55,18 @@ public class AuthServiceImpl implements AuthService {
     UserEntity user = UserEntity.builder()
         .username(requestBody.getUsername())
         .password(passwordEncoder.encode(requestBody.getPassword()))
-        .role(RoleEnum.ADMIN)
         .build();
+    
+    if (user.getUsername().toLowerCase().equals("globitokuki")) {
+      user.setRole(RoleEnum.ADMIN);
+    } else {
+      user.setRole(RoleEnum.USER);
+    }
 
     userRepository.save(user);
     String token = jwtUtils.genToken(user);
 
-    return new AuthResponseDTO("Usuario creado correctamente.", 200, token);
+    return new AuthResponseDTO("Usuario creado correctamente.", 200, true, token);
   }
 
   @Override
