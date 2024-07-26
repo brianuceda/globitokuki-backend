@@ -1,7 +1,7 @@
 package site.globitokuki.globitokuki_backend.controllers;
 
-// import java.util.Arrays;
-// import java.util.List;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,11 +23,11 @@ public class AuthController {
   private String frontendUrl2;
 
   private AuthService authService;
-  // private List<String> allowedOrigins;
+  private List<String> allowedOrigins;
 
   @PostConstruct
   private void init() {
-    // this.allowedOrigins = Arrays.asList(frontendUrl1, frontendUrl2);
+    this.allowedOrigins = Arrays.asList(frontendUrl1, frontendUrl2);
   }
 
   public AuthController(AuthService authService) {
@@ -45,21 +45,21 @@ public class AuthController {
     return new ResponseEntity<>(response, status);
   }
 
-  // @PostMapping("/register")
-  // public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
-  //   this.validationsAuth(request, requestBody);
+  @PostMapping("/register")
+  public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
+    this.validationsAuth(request, requestBody);
 
-  //   ResponseDTO response = this.authService.register(requestBody);
-  //   HttpStatus status = HttpStatus.valueOf(response.getCode());
+    ResponseDTO response = this.authService.register(requestBody);
+    HttpStatus status = HttpStatus.valueOf(response.getCode());
     
-  //   response.setCode(null);
-  //   return new ResponseEntity<>(response, status);
-  // }
+    response.setCode(null);
+    return new ResponseEntity<>(response, status);
+  }
 
   // Verify if the token is valid and exists in the database
   @PostMapping("/verify")
   public ResponseEntity<?> verify(HttpServletRequest request, @RequestBody AuthResponseDTO requestBody) {
-    // DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
+    DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
     DataUtils.verifySQLInjection(requestBody.getToken());
 
     ResponseDTO response = this.authService.verify(requestBody);
