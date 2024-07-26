@@ -17,16 +17,16 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 public class CacheConfig {
   @Value("${REDIS_HOST}")
   private String redisHost;
-  @Value("${REDIS_PORT}")
-  private String redisPort;
   @Value("${REDIS_PASSWORD}")
   private String redisPassword;
+  @Value("${REDIS_PORT}")
+  private int redisPort;
 
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
     RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-    redisConfig.setHostName(String.valueOf(redisHost));
-    redisConfig.setPort(Integer.parseInt(redisPort));
+    redisConfig.setHostName(redisHost);
+    redisConfig.setPort(redisPort);
     redisConfig.setPassword(RedisPassword.of(this.redisPassword));
     return new LettuceConnectionFactory(redisConfig);
   }
