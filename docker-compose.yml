@@ -30,6 +30,9 @@ services:
       JWT_EXP_TIME: ${JWT_EXP_TIME}
     ports:
       - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
   
   nginx:
     image: nginx:latest
