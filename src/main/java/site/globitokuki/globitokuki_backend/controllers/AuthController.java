@@ -45,16 +45,16 @@ public class AuthController {
     return new ResponseEntity<>(response, status);
   }
 
-  @PostMapping("/register")
-  public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
-    this.validationsAuth(request, requestBody);
+  // @PostMapping("/register")
+  // public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
+  //   this.validationsAuth(request, requestBody);
 
-    ResponseDTO response = this.authService.register(requestBody);
-    HttpStatus status = HttpStatus.valueOf(response.getCode());
+  //   ResponseDTO response = this.authService.register(requestBody);
+  //   HttpStatus status = HttpStatus.valueOf(response.getCode());
     
-    response.setCode(null);
-    return new ResponseEntity<>(response, status);
-  }
+  //   response.setCode(null);
+  //   return new ResponseEntity<>(response, status);
+  // }
 
   // Verify if the token is valid and exists in the database
   @PostMapping("/verify")
@@ -70,7 +70,7 @@ public class AuthController {
   }
 
   private void validationsAuth(HttpServletRequest request, AuthRequestDTO requestBody) {
-    // DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
+    DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
     DataUtils.verifySQLInjection(requestBody.getUsername());
     DataUtils.verifySQLInjection(requestBody.getPassword());
   }
