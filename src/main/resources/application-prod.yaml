@@ -19,6 +19,8 @@ spring:
       hibernate:
         format-sql: true
 
+REDIS_HOST: redis
+REDIS_PORT: 6379
 REDIS_PASSWORD: ${REDIS_PASSWORD}
 
 JWT_SECRET_KEY: ${JWT_SECRET_KEY}
