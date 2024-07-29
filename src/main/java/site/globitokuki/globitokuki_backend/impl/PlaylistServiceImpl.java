@@ -1,32 +1,41 @@
 package site.globitokuki.globitokuki_backend.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import site.globitokuki.globitokuki_backend.dtos.ChapterDTO;
+import site.globitokuki.globitokuki_backend.dtos.PlaylistDTO;
+import site.globitokuki.globitokuki_backend.entity.ChapterEntity;
+import site.globitokuki.globitokuki_backend.entity.ImageEntity;
+import site.globitokuki.globitokuki_backend.entity.PlaylistEntity;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.InvalidThumbnail;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
+import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
+import site.globitokuki.globitokuki_backend.repositories.ImageRepository;
+import site.globitokuki.globitokuki_backend.repositories.PlaylistRepository;
+import site.globitokuki.globitokuki_backend.services.PlaylistService;
+// import site.globitokuki.globitokuki_backend.services.SearchPlaylistService;
+import lombok.RequiredArgsConstructor;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
-
-import site.globitokuki.globitokuki_backend.dtos.ChapterDTO;
-import site.globitokuki.globitokuki_backend.dtos.PlaylistDTO;
-import site.globitokuki.globitokuki_backend.entity.ChapterEntity;
-import site.globitokuki.globitokuki_backend.entity.PlaylistEntity;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
-import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
-import site.globitokuki.globitokuki_backend.repositories.PlaylistRepository;
-import site.globitokuki.globitokuki_backend.services.PlaylistService;
-
 @Service
+@RequiredArgsConstructor
 public class PlaylistServiceImpl implements PlaylistService {
+  @Autowired
   private final PlaylistRepository playlistRepository;
-
-  public PlaylistServiceImpl(PlaylistRepository playlistRepository) {
-    this.playlistRepository = playlistRepository;
-  }
+  @Autowired
+  private final ImageRepository imageRepository;
+  // @Autowired
+  // private final SearchPlaylistService searchPlaylistService;
 
   @Override
   public List<PlaylistDTO> getAllPlaylists() {
-    List<PlaylistEntity> playlists = playlistRepository.findAll();
+    List<PlaylistEntity> playlists = playlistRepository.findAllByOrderByOrderViewAsc();
     return PlaylistDTO.convertToDTO(playlists);
   }
 
@@ -46,30 +55,31 @@ public class PlaylistServiceImpl implements PlaylistService {
   }
 
   @Override
-  public String createPlaylist(PlaylistDTO playlistDTO) {
+  public String createPlaylist(PlaylistDTO playlistDTO, MultipartFile thumbnailFile) {
     validateRequiredFields(playlistDTO);
 
-    // Verificar unicidad
     if (existsByUniqueFields(playlistDTO)) {
       throw new PlaylistAlreadyExists("Playlist duplicada.");
     }
 
     PlaylistEntity playlistEntity = playlistDTO.convertToEntity();
-
-    // Establecer la relación bidireccional entre capítulos y playlist
-    List<ChapterEntity> chapterEntities = playlistEntity.getChapterList();
-    if (chapterEntities != null) {
-      for (ChapterEntity chapterEntity : chapterEntities) {
-        chapterEntity.setPlaylist(playlistEntity);
+    if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+      try {
+        ImageEntity imageEntity = new ImageEntity();
+        imageEntity.setImageData(thumbnailFile.getBytes());
+        imageRepository.save(imageEntity);
+        playlistEntity.setThumbnail(imageEntity);
+      } catch (IOException e) {
+        throw new InvalidThumbnail("Error al procesar el archivo.");
       }
     }
 
     playlistRepository.save(playlistEntity);
-    return "Playlist creada correctamente.";
+    return "Playlist creada.";
   }
 
   @Override
-  public String updatePlaylist(String identifier, PlaylistDTO playlistDTO) {
+  public String updatePlaylist(String identifier, PlaylistDTO playlistDTO, MultipartFile thumbnailFile) {
     validateRequiredFields(playlistDTO);
 
     Optional<PlaylistEntity> optionalPlaylist = playlistRepository.findByFullName(identifier);
@@ -78,46 +88,79 @@ public class PlaylistServiceImpl implements PlaylistService {
     }
 
     if (!optionalPlaylist.isPresent()) {
-      throw new PlaylistNotFound("Playlist inválida");
+      throw new PlaylistNotFound("Playlist inválida.");
     }
 
     PlaylistEntity existingPlaylist = optionalPlaylist.get();
+    updatePlaylistEntity(existingPlaylist, playlistDTO, thumbnailFile);
+    playlistRepository.save(existingPlaylist);
+    return "Playlist actualizada.";
+  }
 
-    // Verificar unicidad excluyendo la playlist actual
-    if (!isUniqueFieldsValidForUpdate(playlistDTO, existingPlaylist)) {
-      throw new PlaylistAlreadyExists("Playlist duplicada.");
+  @Override
+  public String deletePlaylist(String identifier) {
+    Optional<PlaylistEntity> optionalPlaylist = playlistRepository.findByFullName(identifier);
+    if (!optionalPlaylist.isPresent()) {
+      optionalPlaylist = playlistRepository.findByShortName(identifier);
     }
 
-    // Solo actualiza los campos que son diferentes
-    if (playlistDTO.getRealName() != null && !playlistDTO.getRealName().isEmpty()
-        && !existingPlaylist.getRealName().equals(playlistDTO.getRealName())) {
+    if (!optionalPlaylist.isPresent()) {
+      throw new PlaylistNotFound("Playlist inválida.");
+    }
+
+    PlaylistEntity playlist = optionalPlaylist.get();
+    playlistRepository.delete(playlist);
+    return "Playlist eliminada.";
+  }
+
+  private void updatePlaylistEntity(PlaylistEntity existingPlaylist, PlaylistDTO playlistDTO,
+      MultipartFile thumbnailFile) {
+    if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+      try {
+        ImageEntity imageEntity = existingPlaylist.getThumbnail();
+        if (imageEntity == null) {
+          imageEntity = new ImageEntity();
+        }
+        imageEntity.setImageData(thumbnailFile.getBytes());
+        imageRepository.save(imageEntity);
+        existingPlaylist.setThumbnail(imageEntity);
+      } catch (IOException e) {
+        throw new InvalidThumbnail("Error al procesar el archivo.");
+      }
+    }
+
+    if (playlistDTO.getRealName() != null && !playlistDTO.getRealName().isEmpty()) {
       existingPlaylist.setRealName(playlistDTO.getRealName());
     }
-    if (playlistDTO.getFullName() != null && !playlistDTO.getFullName().isEmpty()
-        && !existingPlaylist.getFullName().equals(playlistDTO.getFullName())) {
+    if (playlistDTO.getFullName() != null && !playlistDTO.getFullName().isEmpty()) {
       existingPlaylist.setFullName(playlistDTO.getFullName());
     }
-    if (playlistDTO.getShortName() != null && !playlistDTO.getShortName().isEmpty()
-        && !existingPlaylist.getShortName().equals(playlistDTO.getShortName())) {
+    if (playlistDTO.getShortName() != null && !playlistDTO.getShortName().isEmpty()) {
       existingPlaylist.setShortName(playlistDTO.getShortName());
     }
-    if (playlistDTO.getOrderView() != null && !existingPlaylist.getOrderView().equals(playlistDTO.getOrderView())) {
+    if (playlistDTO.getOrderView() != null) {
       existingPlaylist.setOrderView(playlistDTO.getOrderView());
     }
-    if (playlistDTO.getStartViewingDate() != null
-        && !existingPlaylist.getStartViewingDate().equals(playlistDTO.getStartViewingDate())) {
+    if (playlistDTO.getStartViewingDate() != null) {
       existingPlaylist.setStartViewingDate(playlistDTO.getStartViewingDate());
     }
-    if (playlistDTO.getEndViewingDate() != null
-        && !existingPlaylist.getEndViewingDate().equals(playlistDTO.getEndViewingDate())) {
+    if (playlistDTO.getEndViewingDate() != null) {
       existingPlaylist.setEndViewingDate(playlistDTO.getEndViewingDate());
     }
-    if (playlistDTO.getPlaylistLink() != null
-        && !existingPlaylist.getPlaylistLink().equals(playlistDTO.getPlaylistLink())) {
+    if (playlistDTO.getPlaylistLink() != null && !playlistDTO.getPlaylistLink().isEmpty()) {
       existingPlaylist.setPlaylistLink(playlistDTO.getPlaylistLink());
     }
-    if (playlistDTO.getThumbnail() != null && !existingPlaylist.getThumbnail().equals(playlistDTO.getThumbnail())) {
-      existingPlaylist.setThumbnail(playlistDTO.getThumbnail());
+    if (playlistDTO.getDescription() != null && !playlistDTO.getDescription().isEmpty()) {
+      existingPlaylist.setDescription(playlistDTO.getDescription());
+    }
+    if (playlistDTO.getOurComment() != null && !playlistDTO.getOurComment().isEmpty()) {
+      existingPlaylist.setOurComment(playlistDTO.getOurComment());
+    }
+    if (playlistDTO.getStarsGlobito() != null) {
+      existingPlaylist.setStarsGlobito(playlistDTO.getStarsGlobito());
+    }
+    if (playlistDTO.getStarsKuki() != null) {
+      existingPlaylist.setStarsKuki(playlistDTO.getStarsKuki());
     }
 
     // Actualizar capítulos
@@ -134,8 +177,7 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     // Actualizar o agregar capítulos
     if (newChapters != null) {
-      for (int i = 0; i < newChapters.size(); i++) {
-        ChapterDTO newChapterDTO = newChapters.get(i);
+      for (ChapterDTO newChapterDTO : newChapters) {
         Optional<ChapterEntity> existingChapterOpt = existingChapters.stream()
             .filter(chapter -> chapter.getChapterNumber().equals(newChapterDTO.getChapterNumber()))
             .findFirst();
@@ -154,8 +196,6 @@ public class PlaylistServiceImpl implements PlaylistService {
     }
 
     existingPlaylist.setChapterList(existingChapters);
-    playlistRepository.save(existingPlaylist);
-    return "Playlist actualizada correctamente.";
   }
 
   private void validateRequiredFields(PlaylistDTO playlistDTO) {
@@ -173,12 +213,5 @@ public class PlaylistServiceImpl implements PlaylistService {
   private boolean existsByUniqueFields(PlaylistDTO playlistDTO) {
     return playlistRepository.findByFullName(playlistDTO.getFullName()).isPresent()
         || playlistRepository.findByShortName(playlistDTO.getShortName()).isPresent();
-  }
-
-  private boolean isUniqueFieldsValidForUpdate(PlaylistDTO playlistDTO, PlaylistEntity existingPlaylist) {
-    return !(playlistRepository.findByFullName(playlistDTO.getFullName())
-        .filter(p -> !p.getId().equals(existingPlaylist.getId())).isPresent()
-        || playlistRepository.findByShortName(playlistDTO.getShortName())
-            .filter(p -> !p.getId().equals(existingPlaylist.getId())).isPresent());
   }
 }

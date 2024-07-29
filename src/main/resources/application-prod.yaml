@@ -3,6 +3,10 @@ FRONTEND_URL1: https://globitokuki.vercel.app
 FRONTEND_URL2: https://globitokuki.site
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
   datasource:
     url: jdbc:postgresql://postgresdb:5432/${POSTGRES_DB}
     username: ${POSTGRES_USER}

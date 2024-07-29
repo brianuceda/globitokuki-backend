@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import site.globitokuki.globitokuki_backend.dtos.ResponseDTO;
 import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.InvalidThumbnail;
 import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
 import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
 import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.RepeatedChapters;
@@ -50,6 +51,12 @@ public class GlobalExceptionHandler {
   
   @ExceptionHandler(RepeatedChapters.class)
   public ResponseEntity<?> handleRepeatedChapters(RepeatedChapters ex) {
+    ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
+    return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
+  }
+  
+  @ExceptionHandler(InvalidThumbnail.class)
+  public ResponseEntity<?> handleInvalidThumbnail(InvalidThumbnail ex) {
     ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
     return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
   }

@@ -25,17 +25,26 @@ public class PlaylistEntity {
 
   @Column(unique = true, nullable = false)
   private String shortName;
-  
+
   private Integer orderView;
   private String startViewingDate;
   private String endViewingDate;
   private String playlistLink;
-  private String thumbnail;
+
+  @Column(columnDefinition = "TEXT")
+  private String description;
+
+  private String ourComment;
+  private Double starsGlobito;
+  private Double starsKuki;
   
+  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinColumn(name = "image_entity_id", referencedColumnName = "id")
+  private ImageEntity thumbnail;
+
   @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ChapterEntity> chapterList;
 
-  // Método para contar los capítulos
   public int getChapters() {
     return this.chapterList != null ? this.chapterList.size() : 0;
   }

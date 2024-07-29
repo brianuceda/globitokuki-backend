@@ -18,4 +18,10 @@ public class PlaylistExceptions {
       super(message);
     }
   }
+
+  public static class InvalidThumbnail extends RuntimeException {
+    public InvalidThumbnail(String message) {
+      super(message);
+    }
+  }
 }

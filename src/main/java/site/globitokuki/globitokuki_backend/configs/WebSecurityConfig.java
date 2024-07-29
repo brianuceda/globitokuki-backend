@@ -45,6 +45,7 @@ public class WebSecurityConfig {
         }))
         .authorizeHttpRequests(authRequest -> {
           authRequest.requestMatchers("/globitokuki/auth/**").permitAll();
+          authRequest.requestMatchers("/globitokuki/series/**").authenticated();
           authRequest.anyRequest().authenticated();
         })
         .sessionManagement(bkuhSessionManager -> {

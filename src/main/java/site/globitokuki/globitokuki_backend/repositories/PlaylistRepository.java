@@ -10,8 +10,7 @@ import site.globitokuki.globitokuki_backend.entity.PlaylistEntity;
 
 @Repository
 public interface PlaylistRepository extends JpaRepository<PlaylistEntity, Long> {
-  @SuppressWarnings("null")
-  public List<PlaylistEntity> findAll();
+  public List<PlaylistEntity> findAllByOrderByOrderViewAsc();
   public Optional<PlaylistEntity> findByFullName(String fullName);
   public Optional<PlaylistEntity> findByShortName(String shortName);
 }
