@@ -37,7 +37,7 @@ public class SeriesController {
   @PostMapping("/create")
   public ResponseEntity<?> createPlaylist(
       @RequestPart("playlistDTO") PlaylistDTO playlistDTO,
-      @RequestPart("thumbnail") MultipartFile thumbnail) {
+      @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
     try {
       this.validateNoHaveRepeatedChapters(playlistDTO.getChapterList());
 
@@ -60,7 +60,7 @@ public class SeriesController {
   public ResponseEntity<?> updatePlaylist(
       @RequestParam String identifier,
       @RequestPart("playlistDTO") PlaylistDTO playlistDTO,
-      @RequestPart("thumbnail") MultipartFile thumbnail) {
+      @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
     try {
       this.validateNoHaveRepeatedChapters(playlistDTO.getChapterList());
 
