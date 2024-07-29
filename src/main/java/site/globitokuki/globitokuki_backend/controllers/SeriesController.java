@@ -41,7 +41,7 @@ public class SeriesController {
     try {
       this.validateNoHaveRepeatedChapters(playlistDTO.getChapterList());
 
-      log.info("creando: " + playlistDTO);
+      System.out.println("creando: " + playlistDTO);
 
       String response = playlistService.createPlaylist(playlistDTO, thumbnail);
       return new ResponseEntity<>(new ResponseDTO(response, 201), HttpStatus.CREATED);
@@ -64,7 +64,7 @@ public class SeriesController {
     try {
       this.validateNoHaveRepeatedChapters(playlistDTO.getChapterList());
 
-      log.info("actualizando: " + playlistDTO);
+      System.out.println("actualizando: " + playlistDTO);
 
       String response = playlistService.updatePlaylist(identifier, playlistDTO, thumbnail);
       return new ResponseEntity<>(new ResponseDTO(response, 200), HttpStatus.OK);
