@@ -27,8 +27,15 @@ public class SeleniumUtils {
     ChromeOptions options = new ChromeOptions();
     options.addArguments("--start-maximized"); // Maximizar ventana
     options.addArguments("--disable-notifications"); // Desactivar notificaciones
-
+    
     if (this.isProduction) {
+      options.addArguments("--start-maximized"); // Maximizar ventana
+      options.addArguments("--disable-notifications"); // Desactivar notificaciones
+      options.addArguments("--headless"); // Si estás corriendo en un entorno sin GUI
+      options.addArguments("--no-sandbox"); // Desactivar sandbox
+      options.addArguments("--disable-dev-shm-usage"); // Desactivar uso de memoria compartida
+      options.addArguments("--remote-allow-origins=*"); // Permite orígenes remotos
+
       driver.set(new RemoteWebDriver(new URL("http://selenium-hub:4444"), options));
     } else {
       WebDriverManager.chromedriver().setup();
