@@ -1,4 +1,4 @@
-package site.globitokuki.globitokuki_backend.entity;
+package site.globitokuki.globitokuki_backend.entities;
 
 import java.util.Collection;
 import java.util.Set;
@@ -8,10 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Data

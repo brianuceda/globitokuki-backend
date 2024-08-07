@@ -1,9 +1,7 @@
-package site.globitokuki.globitokuki_backend.entity;
+package site.globitokuki.globitokuki_backend.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
@@ -11,12 +9,21 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "chapter")
 public class ChapterEntity {
+  
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   
   private Integer chapterNumber;
   private String ytId;
+  
+  @Column(length = 8)
+  private String viewedTime;
+  @Column(length = 8)
+  private String totalTime;
+
+  private Boolean havePreviousChapter;
+  private Boolean haveNextChapter;
   
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "playlist_id")

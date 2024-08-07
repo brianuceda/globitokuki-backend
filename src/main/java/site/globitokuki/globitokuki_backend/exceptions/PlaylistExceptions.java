@@ -24,4 +24,10 @@ public class PlaylistExceptions {
       super(message);
     }
   }
+
+  public static class InvalidName extends RuntimeException {
+    public InvalidName(String message) {
+      super(message);
+    }
+  }
 }

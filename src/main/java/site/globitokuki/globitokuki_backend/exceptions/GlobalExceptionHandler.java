@@ -6,13 +6,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import site.globitokuki.globitokuki_backend.dtos.ResponseDTO;
-import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.InvalidThumbnail;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.RepeatedChapters;
-import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.ProtectedResource;
-import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.SQLInjectionException;
+import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.*;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.*;
+import site.globitokuki.globitokuki_backend.exceptions.SecurityExceptions.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -57,6 +53,12 @@ public class GlobalExceptionHandler {
   
   @ExceptionHandler(InvalidThumbnail.class)
   public ResponseEntity<?> handleInvalidThumbnail(InvalidThumbnail ex) {
+    ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
+    return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
+  }
+  
+  @ExceptionHandler(InvalidName.class)
+  public ResponseEntity<?> handleInvalidName(InvalidName ex) {
     ResponseDTO response = new ResponseDTO(ex.getMessage(), 403);
     return new ResponseEntity<>(response, HttpStatus.valueOf(response.getCode()));
   }

@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.AuthenticationException;
 
 import site.globitokuki.globitokuki_backend.dtos.*;
-import site.globitokuki.globitokuki_backend.entity.*;
+import site.globitokuki.globitokuki_backend.entities.*;
 import site.globitokuki.globitokuki_backend.repositories.UserRepository;
 import site.globitokuki.globitokuki_backend.services.AuthService;
 import site.globitokuki.globitokuki_backend.utils.JwtUtils;

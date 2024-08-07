@@ -22,16 +22,17 @@ public class AuthController {
   @Value("${FRONTEND_URL2}")
   private String frontendUrl2;
 
-  private AuthService authService;
   private List<String> allowedOrigins;
+
+  private AuthService authService;
+
+  public AuthController(AuthService authService) {
+    this.authService = authService;
+  }
 
   @PostConstruct
   private void init() {
     this.allowedOrigins = Arrays.asList(frontendUrl1, frontendUrl2);
-  }
-
-  public AuthController(AuthService authService) {
-    this.authService = authService;
   }
 
   @PostMapping("/login")
@@ -47,7 +48,7 @@ public class AuthController {
 
   // @PostMapping("/register")
   // public ResponseEntity<?> register(HttpServletRequest request, @RequestBody AuthRequestDTO requestBody) {
-  //   this.validationsAuth(request, requestBody);
+  //   // this.validationsAuth(request, requestBody);
 
   //   ResponseDTO response = this.authService.register(requestBody);
   //   HttpStatus status = HttpStatus.valueOf(response.getCode());

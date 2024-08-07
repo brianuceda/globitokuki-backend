@@ -5,17 +5,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.globitokuki.globitokuki_backend.dtos.ChapterDTO;
 import site.globitokuki.globitokuki_backend.dtos.PlaylistDTO;
-import site.globitokuki.globitokuki_backend.entity.ChapterEntity;
-import site.globitokuki.globitokuki_backend.entity.ImageEntity;
-import site.globitokuki.globitokuki_backend.entity.PlaylistEntity;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.InvalidThumbnail;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistAlreadyExists;
-import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.PlaylistNotFound;
+import site.globitokuki.globitokuki_backend.entities.ChapterEntity;
+import site.globitokuki.globitokuki_backend.entities.ImageEntity;
+import site.globitokuki.globitokuki_backend.entities.PlaylistEntity;
+import site.globitokuki.globitokuki_backend.entities.enums.StatesEnum;
+import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.*;
 import site.globitokuki.globitokuki_backend.exceptions.GeneralExceptions.RequiredFieldMissing;
 import site.globitokuki.globitokuki_backend.repositories.ImageRepository;
 import site.globitokuki.globitokuki_backend.repositories.PlaylistRepository;
 import site.globitokuki.globitokuki_backend.services.PlaylistService;
-// import site.globitokuki.globitokuki_backend.services.SearchPlaylistService;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -30,8 +28,6 @@ public class PlaylistServiceImpl implements PlaylistService {
   private final PlaylistRepository playlistRepository;
   @Autowired
   private final ImageRepository imageRepository;
-  // @Autowired
-  // private final SearchPlaylistService searchPlaylistService;
 
   @Override
   public List<PlaylistDTO> getAllPlaylists() {
@@ -63,6 +59,7 @@ public class PlaylistServiceImpl implements PlaylistService {
     }
 
     PlaylistEntity playlistEntity = playlistDTO.convertToEntity();
+
     if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
       try {
         ImageEntity imageEntity = new ImageEntity();
@@ -73,6 +70,18 @@ public class PlaylistServiceImpl implements PlaylistService {
         throw new InvalidThumbnail("Error al procesar el archivo.");
       }
     }
+
+    // Establecer la relación entre playlist y capítulos
+    if (playlistEntity.getChapterList() != null) {
+      for (ChapterEntity chapter : playlistEntity.getChapterList()) {
+        chapter = this.validateYoutubeId(chapter);
+        chapter.setPlaylist(playlistEntity);
+      }
+    }
+
+    playlistEntity.setLastChapterViewed(null);
+    playlistEntity.setLastChapterViewedTime("00:00:00");
+    playlistEntity.setLastChapterTotalTime("00:00:00");
 
     playlistRepository.save(playlistEntity);
     return "Playlist creada.";
@@ -98,6 +107,57 @@ public class PlaylistServiceImpl implements PlaylistService {
   }
 
   @Override
+  public String updatePlaylistState(String identifier, StatesEnum state) {
+    Optional<PlaylistEntity> optionalPlaylist = playlistRepository.findByFullName(identifier);
+    if (!optionalPlaylist.isPresent()) {
+      optionalPlaylist = playlistRepository.findByShortName(identifier);
+    }
+
+    if (!optionalPlaylist.isPresent()) {
+      throw new PlaylistNotFound("Playlist inválida.");
+    }
+
+    PlaylistEntity playlist = optionalPlaylist.get();
+    playlist.setState(state);
+    playlistRepository.save(playlist);
+
+    String newStateString = "";
+    switch (playlist.getState()) {
+      case WATCHED:
+        newStateString = "Finalizada";
+        break;
+      case WATCHING:
+        newStateString = "En curso";
+        break;
+      case NOT_WATCHED:
+        newStateString = "No vista";
+        break;
+    }
+
+    return "Nuevo estado: " + newStateString;
+  }
+
+  @Override
+  public String updateLastViewed(String identifier, String lastChapterViewed, String lastChapterViewedTotalTime, String lastChapterViewedActualTime) {
+    Optional<PlaylistEntity> optionalPlaylist = playlistRepository.findByFullName(identifier);
+    if (!optionalPlaylist.isPresent()) {
+      optionalPlaylist = playlistRepository.findByShortName(identifier);
+    }
+
+    if (!optionalPlaylist.isPresent()) {
+      throw new PlaylistNotFound("Playlist inválida.");
+    }
+
+    PlaylistEntity playlist = optionalPlaylist.get();
+    playlist.setLastChapterViewed(Integer.parseInt(lastChapterViewed));
+    playlist.setLastChapterViewedTime(lastChapterViewedActualTime);
+    playlist.setLastChapterTotalTime(lastChapterViewedTotalTime);
+    playlistRepository.save(playlist);
+
+    return "Último capítulo visto actualizado.";
+  }
+
+  @Override
   public String deletePlaylist(String identifier) {
     Optional<PlaylistEntity> optionalPlaylist = playlistRepository.findByFullName(identifier);
     if (!optionalPlaylist.isPresent()) {
@@ -113,8 +173,40 @@ public class PlaylistServiceImpl implements PlaylistService {
     return "Playlist eliminada.";
   }
 
+  private void validateRequiredFields(PlaylistDTO playlistDTO) {
+    if (playlistDTO.getRealName() == null || playlistDTO.getRealName().isEmpty()) {
+      throw new RequiredFieldMissing("Nombre real es requerido");
+    }
+    if (playlistDTO.getFullName() == null || playlistDTO.getFullName().isEmpty()) {
+      throw new RequiredFieldMissing("Nombre completo es requerido");
+    }
+    if (playlistDTO.getShortName() == null || playlistDTO.getShortName().isEmpty()) {
+      throw new RequiredFieldMissing("Nombre corto es requerido");
+    }
+  }
+
+  private boolean existsByUniqueFields(PlaylistDTO playlistDTO) {
+    return playlistRepository.findByFullName(playlistDTO.getFullName()).isPresent()
+        || playlistRepository.findByShortName(playlistDTO.getShortName()).isPresent();
+  }
+
+  private ChapterEntity validateYoutubeId(ChapterEntity chapter) {
+    String ytId = chapter.getYtId();
+
+    if (ytId == null || ytId.isEmpty()) {
+      throw new RequiredFieldMissing("ID requerido en el capítulo " + chapter.getChapterNumber());
+    }
+
+    if (ytId.contains("watch?v=")) {
+      chapter.setYtId(ytId.substring(ytId.indexOf("=") + 1, ytId.indexOf("=") + 12));
+    }
+
+    return chapter;
+  }
+
   private void updatePlaylistEntity(PlaylistEntity existingPlaylist, PlaylistDTO playlistDTO,
       MultipartFile thumbnailFile) {
+    
     if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
       try {
         ImageEntity imageEntity = existingPlaylist.getThumbnail();
@@ -162,6 +254,9 @@ public class PlaylistServiceImpl implements PlaylistService {
     if (playlistDTO.getStarsKuki() != null) {
       existingPlaylist.setStarsKuki(playlistDTO.getStarsKuki());
     }
+    if (playlistDTO.getState() != null) {
+      existingPlaylist.setState(playlistDTO.getState());
+    }
 
     // Actualizar capítulos
     List<ChapterEntity> existingChapters = existingPlaylist.getChapterList();
@@ -177,19 +272,45 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     // Actualizar o agregar capítulos
     if (newChapters != null) {
+      int iteration = 0;
+
       for (ChapterDTO newChapterDTO : newChapters) {
+        iteration++;
+
         Optional<ChapterEntity> existingChapterOpt = existingChapters.stream()
             .filter(chapter -> chapter.getChapterNumber().equals(newChapterDTO.getChapterNumber()))
             .findFirst();
 
         if (existingChapterOpt.isPresent()) {
           ChapterEntity existingChapterEntity = existingChapterOpt.get();
+
           if (!existingChapterEntity.getYtId().equals(newChapterDTO.getYtId())) {
             existingChapterEntity.setYtId(newChapterDTO.getYtId());
           }
+
+          existingChapterEntity.setViewedTime(newChapterDTO.getViewedTime());
+          existingChapterEntity.setTotalTime(newChapterDTO.getTotalTime());
+
+          if (iteration == 1) {
+            existingChapterEntity.setHavePreviousChapter(false);
+          } else {
+            existingChapterEntity.setHavePreviousChapter(true);
+          }
+
+          if (iteration == newChapters.size()) {
+            existingChapterEntity.setHaveNextChapter(false);
+          } else {
+            existingChapterEntity.setHaveNextChapter(true);
+          }
+
+          existingChapterEntity = this.validateYoutubeId(existingChapterEntity);
         } else {
           ChapterEntity chapterEntity = newChapterDTO.convertToEntity();
+
+          chapterEntity = this.validateYoutubeId(chapterEntity);
+
           chapterEntity.setPlaylist(existingPlaylist);
+          
           existingChapters.add(chapterEntity);
         }
       }
@@ -198,20 +319,4 @@ public class PlaylistServiceImpl implements PlaylistService {
     existingPlaylist.setChapterList(existingChapters);
   }
 
-  private void validateRequiredFields(PlaylistDTO playlistDTO) {
-    if (playlistDTO.getRealName() == null || playlistDTO.getRealName().isEmpty()) {
-      throw new RequiredFieldMissing("Nombre real es requerido");
-    }
-    if (playlistDTO.getFullName() == null || playlistDTO.getFullName().isEmpty()) {
-      throw new RequiredFieldMissing("Nombre completo es requerido");
-    }
-    if (playlistDTO.getShortName() == null || playlistDTO.getShortName().isEmpty()) {
-      throw new RequiredFieldMissing("Nombre corto es requerido");
-    }
-  }
-
-  private boolean existsByUniqueFields(PlaylistDTO playlistDTO) {
-    return playlistRepository.findByFullName(playlistDTO.getFullName()).isPresent()
-        || playlistRepository.findByShortName(playlistDTO.getShortName()).isPresent();
-  }
 }

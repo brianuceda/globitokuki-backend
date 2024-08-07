@@ -43,7 +43,7 @@ public class DataUtils {
 
   public static void verifySQLInjection(String str) {
     if (str.matches(".*(--|[;+*^$|?{}\\[\\]()'\"\\']).*") || str.contains("SELECT") || str.contains("DELETE")
-        || str.contains("UPDATE") || str.contains("INSERT") || str.contains("DROP") || str.isEmpty() || str.isBlank()
+        || str.contains("UPDATE") || str.contains("INSERT") || str.contains("DROP") || str.contains(" OR ") || str.isEmpty() || str.isBlank()
         || str == null) {
       throw new SQLInjectionException("Esas cosas son del diablo.");
     }
