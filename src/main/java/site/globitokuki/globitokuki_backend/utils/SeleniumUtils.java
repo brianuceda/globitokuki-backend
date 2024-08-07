@@ -30,10 +30,6 @@ public class SeleniumUtils {
       // Configuración para entorno de producción
       options.addArguments("--start-maximized"); // Maximizar ventana
       options.addArguments("--disable-notifications"); // Desactivar notificaciones
-      options.addArguments("--headless"); // Si estás corriendo en un entorno sin GUI
-      options.addArguments("--no-sandbox"); // Desactivar sandbox
-      options.addArguments("--disable-dev-shm-usage"); // Desactivar uso de memoria compartida
-      options.addArguments("--remote-allow-origins=*"); // Permitir orígenes remotos
 
       // Configura la URL del Selenium Hub (cambia la URL si es necesario)
       driver.set(new RemoteWebDriver(new URL("http://selenium-hub:4444"), options));
