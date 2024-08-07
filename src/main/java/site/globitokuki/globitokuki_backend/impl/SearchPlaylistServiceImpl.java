@@ -9,15 +9,12 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import site.globitokuki.globitokuki_backend.dtos.ChapterDTO;
 import site.globitokuki.globitokuki_backend.dtos.PlaylistDTO;
 import site.globitokuki.globitokuki_backend.dtos.selenium.CookiesDTO;
@@ -28,6 +25,7 @@ import site.globitokuki.globitokuki_backend.exceptions.PlaylistExceptions.*;
 import site.globitokuki.globitokuki_backend.repositories.PlaylistRepository;
 import site.globitokuki.globitokuki_backend.repositories.SessionRepository;
 import site.globitokuki.globitokuki_backend.services.SearchPlaylistService;
+import site.globitokuki.globitokuki_backend.utils.SeleniumUtils;
 import lombok.extern.java.Log;
 import java.util.stream.Collectors;
 
@@ -41,6 +39,7 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
   // ? Inyección de dependencias
   private SessionRepository sessionRepository;
   private PlaylistRepository playlistRepository;
+  private SeleniumUtils seleniumUtils;
 
   // ? Variables
   private String sessionName = "globitokuki2";
@@ -55,9 +54,11 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
   // + this.size +
   // "&sa=X&ved=2ahUKEwiT59D2zMeHAxU4RjABHYhzAhwQpwV6BAgCEAc&biw=1280&bih=720&dpr=1";
 
-  public SearchPlaylistServiceImpl(SessionRepository sessionRepository, PlaylistRepository playlistRepository) {
+  public SearchPlaylistServiceImpl(SessionRepository sessionRepository, PlaylistRepository playlistRepository,
+      SeleniumUtils seleniumUtils) {
     this.sessionRepository = sessionRepository;
     this.playlistRepository = playlistRepository;
+    this.seleniumUtils = seleniumUtils;
   }
 
   // ? Methods
@@ -251,7 +252,7 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
             // Crear y agregar ChapterDTO a la lista
             ChapterDTO chapterDTO = new ChapterDTO(chapterNumber, videoId, "00:00:00", duration,
                 iteration == 1 ? false : true, iteration == videoElements.size() ? false : true);
-            
+
             chapterList.add(chapterDTO);
 
           } catch (Exception e) {
@@ -281,11 +282,11 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
     SessionEntity session = sessionOpt.get();
     List<CookieEntity> cookies = session.getCookies();
 
-    ChromeOptions options = new ChromeOptions();
-    options.addArguments("--start-maximized"); // Maximizar ventana
-    options.addArguments("--disable-notifications"); // Desactivar notificaciones
-    WebDriverManager.chromedriver().setup();
-    driver.set(new ChromeDriver(options));
+    try {
+      driver = this.seleniumUtils.setUp(driver);
+    } catch (Exception e) {
+      throw new IllegalStateException("Error initializing WebDriver: " + e.getMessage());
+    }
 
     WebDriver webDriver = driver.get();
     webDriver.get("https://www" + domain);
@@ -312,7 +313,7 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
     long lastHeight = (long) js.executeScript("return document.documentElement.scrollHeight");
 
     while (true) {
-      for (int i = 0; i < 5; i++) {  // Dividir el scroll en 10 incrementos
+      for (int i = 0; i < 5; i++) { // Dividir el scroll en 10 incrementos
         js.executeScript("window.scrollBy(0, " + (lastHeight / 10) + ");");
         try {
           Thread.sleep(500); // Esperar 0.5 segundos entre incrementos

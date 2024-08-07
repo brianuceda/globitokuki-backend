@@ -23,21 +23,25 @@ public class SeleniumUtils {
   private boolean isProduction;
   public final static Duration TIMEOUT = Duration.ofSeconds(5);
 
-  private ThreadLocal<RemoteWebDriver> setUp(ThreadLocal<RemoteWebDriver> driver) throws Exception {
+  public ThreadLocal<RemoteWebDriver> setUp(ThreadLocal<RemoteWebDriver> driver) throws Exception {
     ChromeOptions options = new ChromeOptions();
-    options.addArguments("--start-maximized"); // Maximizar ventana
-    options.addArguments("--disable-notifications"); // Desactivar notificaciones
     
     if (this.isProduction) {
+      // Configuración para entorno de producción
       options.addArguments("--start-maximized"); // Maximizar ventana
       options.addArguments("--disable-notifications"); // Desactivar notificaciones
       options.addArguments("--headless"); // Si estás corriendo en un entorno sin GUI
       options.addArguments("--no-sandbox"); // Desactivar sandbox
       options.addArguments("--disable-dev-shm-usage"); // Desactivar uso de memoria compartida
-      options.addArguments("--remote-allow-origins=*"); // Permite orígenes remotos
+      options.addArguments("--remote-allow-origins=*"); // Permitir orígenes remotos
 
+      // Configura la URL del Selenium Hub (cambia la URL si es necesario)
       driver.set(new RemoteWebDriver(new URL("http://selenium-hub:4444"), options));
     } else {
+      // Configuración para entorno de desarrollo
+      options.addArguments("--start-maximized"); // Maximizar ventana
+      options.addArguments("--disable-notifications"); // Desactivar notificaciones
+
       WebDriverManager.chromedriver().setup();
       driver.set(new ChromeDriver(options));
     }
