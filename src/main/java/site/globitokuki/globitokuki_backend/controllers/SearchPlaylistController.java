@@ -49,7 +49,7 @@ public class SearchPlaylistController {
   }
 
   @PostMapping("/save-cookies")
-  public ResponseEntity<String> saveCookiesInDb(HttpServletRequest request, @RequestBody List<CookiesDTO> cookies) {
+  public ResponseEntity<?> saveCookiesInDb(HttpServletRequest request, @RequestBody List<CookiesDTO> cookies) {
     DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
 
     if (this.isProduction) {
@@ -64,21 +64,21 @@ public class SearchPlaylistController {
     }
   }
 
-  @GetMapping("/google")
-  public ResponseEntity<String> searchGoogle(HttpServletRequest request, @RequestParam String playlistYtUrl) {
-    DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
+  // @GetMapping("/google")
+  // public ResponseEntity<?> searchGoogle(HttpServletRequest request, @RequestParam String playlistYtUrl) {
+  //   DataUtils.verifyAllowedOrigin(this.allowedOrigins, request.getHeader("Origin"));
 
-    if (this.isProduction) {
-      return new ResponseEntity<>(new ResponseDTO("No permitido en producción", 403), HttpStatus.FORBIDDEN);
-    } else {
-      try {
-        searchPlaylistService.searchGoogle(playlistYtUrl);
-        return new ResponseEntity<>("Search completed successfully.", HttpStatus.OK);
-      } catch (Exception e) {
-        return new ResponseEntity<>("Search failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    }
-  }
+  //   if (this.isProduction) {
+  //     return new ResponseEntity<>(new ResponseDTO("No permitido en producción", 403), HttpStatus.FORBIDDEN);
+  //   } else {
+  //     try {
+  //       searchPlaylistService.searchGoogle(playlistYtUrl);
+  //       return new ResponseEntity<>("Search completed successfully.", HttpStatus.OK);
+  //     } catch (Exception e) {
+  //       return new ResponseEntity<>("Search failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+  //     }
+  //   }
+  // }
 
   @GetMapping("/playlist-images")
   public ResponseEntity<?> searchGoogleImages(HttpServletRequest request, @RequestParam String query) {
