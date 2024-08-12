@@ -8,6 +8,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -201,6 +202,26 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
       // Validar que la lista de reproducción sea válida
       validatePlaylist(webDriver, domain);
 
+      // Esperar a que se cargue el botón de menú
+      try {
+        WebElement btn = new WebDriverWait(webDriver, Duration.ofSeconds(10))
+            .until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#button-shape .yt-spec-button-shape-next--icon-button")));
+
+        if (btn != null) {
+          btn.click();
+
+          WebElement showUnavailableVideoBtn = new WebDriverWait(webDriver, Duration.ofSeconds(10))
+              .until(ExpectedConditions.presenceOfElementLocated(By.tagName("ytd-menu-navigation-item-renderer")));
+
+          if (showUnavailableVideoBtn != null) {
+            WebElement linkElement = showUnavailableVideoBtn.findElement(By.tagName("a"));
+            linkElement.click();
+          }
+        }
+      } catch (TimeoutException e) {
+        throw new TimeoutException("Un elemento tardó en cargar");
+      }
+
       // Scroll hasta el final de la página
       scrollToBottom(webDriver);
 
@@ -314,7 +335,7 @@ public class SearchPlaylistServiceImpl implements SearchPlaylistService {
 
     while (true) {
       for (int i = 0; i < 5; i++) { // Dividir el scroll en 10 incrementos
-        js.executeScript("window.scrollBy(0, " + (lastHeight / 10) + ");");
+        js.executeScript("window.scrollBy(0, " + (lastHeight / 5) + ");");
         try {
           Thread.sleep(500); // Esperar 0.5 segundos entre incrementos
         } catch (InterruptedException e) {

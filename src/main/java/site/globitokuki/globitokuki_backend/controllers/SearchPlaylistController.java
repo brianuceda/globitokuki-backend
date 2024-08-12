@@ -3,6 +3,7 @@ package site.globitokuki.globitokuki_backend.controllers;
 import java.util.Arrays;
 import java.util.List;
 
+import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,6 +91,10 @@ public class SearchPlaylistController {
       return new ResponseEntity<>(response, HttpStatus.OK);
     } catch (PlaylistNotFound e) {
       return new ResponseEntity<>(new ResponseDTO(e.getMessage(), 404), HttpStatus.NOT_FOUND);
+    } catch (TimeoutException e) {
+      return new ResponseEntity<>(new ResponseDTO(e.getMessage(), 408), HttpStatus.REQUEST_TIMEOUT);
+    } catch (Exception e) {
+      return new ResponseEntity<>(new ResponseDTO(e.getMessage(), 500), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
   
